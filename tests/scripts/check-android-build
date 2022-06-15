@@ -42,7 +42,7 @@ set -x
 prepare_dbus()
 {
     DBUS_SOURCE=dbus-1.4.26
-    wget -nv "https://dbus.freedesktop.org/releases/dbus/${DBUS_SOURCE}.tar.gz"
+    wget --tries 4 --no-check-certificate --quiet "https://dbus.freedesktop.org/releases/dbus/${DBUS_SOURCE}.tar.gz"
     tar xvf "${DBUS_SOURCE}.tar.gz"
     (cd "${DBUS_SOURCE}" && ./configure --prefix= --exec-prefix=/usr \
         && sed -i '/HAVE_BACKTRACE/d' config.h \
@@ -158,11 +158,11 @@ EOF
 #######################################
 prepare_libmdnssd()
 {
-    readonly MDNSRESPONDER_SOURCE=mDNSResponder-878.30.4
+    readonly MDNSRESPONDER_SOURCE=mDNSResponder-1310.80.1
 
     [[ ${OTBR_MDNS} == mDNSResponder ]] || return 0
 
-    wget -nv "https://opensource.apple.com/tarballs/mDNSResponder/${MDNSRESPONDER_SOURCE}.tar.gz"
+    wget --tries 4 --no-check-certificate --quiet "https://opensource.apple.com/tarballs/mDNSResponder/${MDNSRESPONDER_SOURCE}.tar.gz"
     tar xvf "${MDNSRESPONDER_SOURCE}.tar.gz"
     cat >"${MDNSRESPONDER_SOURCE}/Android.mk" <<EOF
 LOCAL_PATH:= \$(call my-dir)
@@ -198,8 +198,8 @@ OPENTHREAD_ENABLE_ANDROID_MK := 1
 ANDROID_NDK := 1
 OPENTHREAD_PROJECT_CFLAGS := \
     -DOPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE=1 \
-    -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\> \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"
+    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\" \
+    -std=c99
 EOF
 }
 

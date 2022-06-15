@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2017, The OpenThread Authors.
+ *    Copyright (c) 2021, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -25,52 +25,36 @@
  *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *    POSSIBILITY OF SUCH DAMAGE.
  */
-
-/**
- * @file
- *   This file includes implementation for Thread border router agent instance.
- */
-
-#define OTBR_LOG_TAG "AGENT"
-
-#include "agent/agent_instance.hpp"
-
 #include <assert.h>
 
-#include "common/code_utils.hpp"
-#include "common/logging.hpp"
+#include "common/mainloop_manager.hpp"
 
 namespace otbr {
 
-AgentInstance::AgentInstance(Ncp::ControllerOpenThread &aNcp)
-    : mNcp(aNcp)
-    , mBorderAgent(aNcp)
+void MainloopManager::AddMainloopProcessor(MainloopProcessor *aMainloopProcessor)
 {
+    assert(aMainloopProcessor != nullptr);
+    mMainloopProcessorList.emplace_back(aMainloopProcessor);
 }
 
-otbrError AgentInstance::Init(void)
+void MainloopManager::RemoveMainloopProcessor(MainloopProcessor *aMainloopProcessor)
 {
-    otbrError error = OTBR_ERROR_NONE;
-
-    SuccessOrExit(error = mNcp.Init());
-
-    mBorderAgent.Init();
-
-exit:
-    otbrLogResult(error, "Initialize OpenThread Border Router Agent");
-    return error;
+    mMainloopProcessorList.remove(aMainloopProcessor);
 }
 
-void AgentInstance::Update(MainloopContext &aMainloop)
+void MainloopManager::Update(MainloopContext &aMainloop)
 {
-    mNcp.Update(aMainloop);
-    mBorderAgent.Update(aMainloop);
+    for (auto &mainloopProcessor : mMainloopProcessorList)
+    {
+        mainloopProcessor->Update(aMainloop);
+    }
 }
 
-void AgentInstance::Process(const MainloopContext &aMainloop)
+void MainloopManager::Process(const MainloopContext &aMainloop)
 {
-    mNcp.Process(aMainloop);
-    mBorderAgent.Process(aMainloop);
+    for (auto &mainloopProcessor : mMainloopProcessorList)
+    {
+        mainloopProcessor->Process(aMainloop);
+    }
 }
-
 } // namespace otbr

@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2020-2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,13 @@
 #
 
 add_subdirectory(agent)
+if(OTBR_BORDER_AGENT)
+    add_subdirectory(border_agent)
+endif()
 add_subdirectory(common)
+add_subdirectory(ncp)
+add_subdirectory(sdp_proxy)
+add_subdirectory(trel_dnssd)
 
 if(OTBR_DBUS)
     add_subdirectory(dbus)

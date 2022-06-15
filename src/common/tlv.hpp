@@ -129,9 +129,45 @@ public:
     uint8_t GetValueUInt8(void) const { return *static_cast<const uint8_t *>(GetValue()); }
 
     /**
+     * This method sets a uint64_t as the value.
+     *
+     * @param[in] aValue  The uint64_t value.
+     *
+     */
+    void SetValue(uint64_t aValue)
+    {
+        uint8_t *value;
+
+        SetLength(sizeof(aValue), false);
+        value = static_cast<uint8_t *>(GetValue());
+        for (int i = 0; i < int{sizeof(aValue)}; ++i)
+        {
+            value[i] = (aValue >> (8 * (sizeof(aValue) - i - 1))) & 0xff;
+        }
+    }
+
+    /**
+     * This method sets a uint32_t as the value.
+     *
+     * @param[in] aValue  The uint32_t value.
+     *
+     */
+    void SetValue(uint32_t aValue)
+    {
+        uint8_t *value;
+
+        SetLength(sizeof(aValue), false);
+        value = static_cast<uint8_t *>(GetValue());
+        for (int i = 0; i < int{sizeof(aValue)}; ++i)
+        {
+            value[i] = (aValue >> (8 * (sizeof(aValue) - i - 1))) & 0xff;
+        }
+    }
+
+    /**
      * This method sets uint16_t as the value.
      *
-     * @param[in]    aValue         uint16_t value
+     * @param[in] aValue  The uint16_t value.
      *
      */
     void SetValue(uint16_t aValue)
@@ -147,7 +183,7 @@ public:
     /**
      * This method sets uint8_t as the value.
      *
-     * @param[in]    aValue         uint8_t value
+     * @param[in] aValue  The uint8_t value.
      *
      */
     void SetValue(uint8_t aValue)
@@ -159,7 +195,7 @@ public:
     /**
      * This method sets int8_t as the value.
      *
-     * @param[in]    aValue         int8_t value
+     * @param[in] aValue  The int8_t value.
      *
      */
     void SetValue(int8_t aValue)

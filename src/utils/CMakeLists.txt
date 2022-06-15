@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2020-2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,15 @@
 
 add_library(otbr-utils
     crc16.cpp
+    dns_utils.cpp
     hex.cpp
     pskc.cpp
     socket_utils.cpp
     steering_data.cpp
-    strcpy_utils.cpp
+    string_utils.cpp
     system_utils.cpp
+    thread_helper.cpp
+    thread_helper.hpp
 )
 target_link_libraries(otbr-utils PRIVATE
     otbr-common

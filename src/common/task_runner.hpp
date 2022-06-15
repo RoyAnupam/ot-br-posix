@@ -42,6 +42,7 @@
 #include <mutex>
 #include <queue>
 
+#include "common/code_utils.hpp"
 #include "common/mainloop.hpp"
 #include "common/time.hpp"
 
@@ -52,7 +53,7 @@ namespace otbr {
  * tasks on the mainloop.
  *
  */
-class TaskRunner : public MainloopProcessor
+class TaskRunner : public MainloopProcessor, private NonCopyable
 {
 public:
     /**
@@ -79,7 +80,7 @@ public:
      * Tasks are executed sequentially and follow the First-Come-First-Serve rule.
      * It is safe to call this method in different threads concurrently.
      *
-     * @param[in]  aTask  The task to be executed.
+     * @param[in] aTask  The task to be executed.
      *
      */
     void Post(const Task<void> aTask);
@@ -89,8 +90,8 @@ public:
      *
      * The task will be executed on the mainloop after `aDelay` milliseconds from now.
      *
-     * @param[in]  aDelay  The delay before executing the task (in milliseconds).
-     * @param[in]  aTask   The task to be executed.
+     * @param[in] aDelay  The delay before executing the task (in milliseconds).
+     * @param[in] aTask   The task to be executed.
      *
      */
     void Post(Milliseconds aDelay, const Task<void> aTask);
@@ -102,32 +103,19 @@ public:
      * This method must be called in a thread other than the mainloop thread. Otherwise,
      * the caller will be blocked forever.
      *
-     * @returns  The result returned by the task @p aTask.
+     * @returns The result returned by the task @p aTask.
      *
      */
     template <class T> T PostAndWait(const Task<T> &aTask)
     {
         std::promise<T> pro;
 
-        Post([&]() { pro.set_value(aTask()); });
+        Post([&pro, &aTask]() { pro.set_value(aTask()); });
 
         return pro.get_future().get();
     }
 
-    /**
-     * This method updates the mainloop context.
-     *
-     * @param[inout]  aMainloop  A reference to the mainloop to be updated.
-     *
-     */
     void Update(MainloopContext &aMainloop) override;
-
-    /**
-     * This method processes mainloop events.
-     *
-     * @param[in]  aMainloop  A reference to the mainloop context.
-     *
-     */
     void Process(const MainloopContext &aMainloop) override;
 
 private:

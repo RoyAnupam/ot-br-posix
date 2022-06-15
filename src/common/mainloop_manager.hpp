@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2020, The OpenThread Authors.
+ *    Copyright (c) 2021, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -28,72 +28,81 @@
 
 /**
  * @file
- *   This file includes definition for Thread border router agent instance parameters.
+ *   This file includes definitions for mainloop manager.
  */
 
-#ifndef OTBR_AGENT_INSATNCE_PARAMS_HPP_
-#define OTBR_AGENT_INSATNCE_PARAMS_HPP_
+#ifndef OTBR_COMMON_MAINLOOP_MANAGER_HPP_
+#define OTBR_COMMON_MAINLOOP_MANAGER_HPP_
+
+#include <openthread-br/config.h>
+
+#include <openthread/openthread-system.h>
+
+#include <list>
+
+#include "common/code_utils.hpp"
+#include "common/mainloop.hpp"
+#include "ncp/ncp_openthread.hpp"
 
 namespace otbr {
 
 /**
- * This class represents the agent instance parameters.
+ * This class implements the mainloop manager.
  *
  */
-class InstanceParams
+class MainloopManager : private NonCopyable
 {
 public:
     /**
-     * This method gets the single `InstanceParams` instance.
-     *
-     * @returns  The single `InstanceParams` instance.
+     * The constructor to initialize the mainloop manager.
      *
      */
-    static InstanceParams &Get(void);
+    MainloopManager() = default;
 
     /**
-     * This method sets the Thread network interface name.
-     *
-     * @param[in] aName  The Thread network interface name.
+     * This method returns the singleton instance of the mainloop manager.
      *
      */
-    void SetThreadIfName(const char *aName) { mThreadIfName = aName; }
-
-    /**
-     * This method gets the Thread network interface name.
-     *
-     * @returns The Thread network interface name.
-     *
-     */
-    const char *GetThreadIfName(void) const { return mThreadIfName; }
-
-    /**
-     * This method sets the Backbone network interface name.
-     *
-     * @param[in] aName  The Backbone network interface name.
-     *
-     */
-    void SetBackboneIfName(const char *aName) { mBackboneIfName = aName; }
-
-    /**
-     * This method gets the Backbone network interface name.
-     *
-     * @returns The Backbone network interface name.
-     *
-     */
-    const char *GetBackboneIfName(void) const { return mBackboneIfName; }
-
-private:
-    InstanceParams()
-        : mThreadIfName(nullptr)
-        , mBackboneIfName(nullptr)
+    static MainloopManager &GetInstance(void)
     {
+        static MainloopManager sMainloopManager;
+        return sMainloopManager;
     }
 
-    const char *mThreadIfName;
-    const char *mBackboneIfName;
+    /**
+     * This method adds a mainloop processors to the mainloop managger.
+     *
+     * @param[in] aMainloopProcessor  A pointer to the mainloop processor.
+     *
+     */
+    void AddMainloopProcessor(MainloopProcessor *aMainloopProcessor);
+
+    /**
+     * This method removes a mainloop processors from the mainloop managger.
+     *
+     * @param[in] aMainloopProcessor  A pointer to the mainloop processor.
+     *
+     */
+    void RemoveMainloopProcessor(MainloopProcessor *aMainloopProcessor);
+
+    /**
+     * This method updates the mainloop context of all mainloop processors.
+     *
+     * @param[in,out] aMainloop  A reference to the mainloop to be updated.
+     *
+     */
+    void Update(MainloopContext &aMainloop);
+
+    /**
+     * This method processes mainloop events of all mainloop processors.
+     *
+     * @param[in] aMainloop  A reference to the mainloop context.
+     *
+     */
+    void Process(const MainloopContext &aMainloop);
+
+private:
+    std::list<MainloopProcessor *> mMainloopProcessorList;
 };
-
 } // namespace otbr
-
-#endif // OTBR_AGENT_INSATNCE_PARAMS_HPP_
+#endif // OTBR_COMMON_MAINLOOP_MANAGER_HPP_

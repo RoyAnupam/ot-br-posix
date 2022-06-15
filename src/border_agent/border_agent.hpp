@@ -34,20 +34,22 @@
 #ifndef OTBR_AGENT_BORDER_AGENT_HPP_
 #define OTBR_AGENT_BORDER_AGENT_HPP_
 
+#if !(OTBR_ENABLE_MDNS_AVAHI || OTBR_ENABLE_MDNS_MDNSSD || OTBR_ENABLE_MDNS_MOJO)
+#error "Border Agent feature requires at least one `OTBR_MDNS` implementation"
+#endif
+
 #include <vector>
 
 #include <stdint.h>
 
-#include "agent/advertising_proxy.hpp"
-#include "agent/discovery_proxy.hpp"
-#include "agent/instance_params.hpp"
-#include "agent/ncp_openthread.hpp"
+#include "backbone_router/backbone_agent.hpp"
+#include "common/code_utils.hpp"
 #include "common/mainloop.hpp"
 #include "mdns/mdns.hpp"
-
-#if OTBR_ENABLE_BACKBONE_ROUTER
-#include "backbone_router/backbone_agent.hpp"
-#endif
+#include "ncp/ncp_openthread.hpp"
+#include "sdp_proxy/advertising_proxy.hpp"
+#include "sdp_proxy/discovery_proxy.hpp"
+#include "trel_dnssd/trel_dnssd.hpp"
 
 #ifndef OTBR_VENDOR_NAME
 #define OTBR_VENDOR_NAME "OpenThread"
@@ -58,7 +60,7 @@
 #endif
 
 #ifndef OTBR_MESHCOP_SERVICE_INSTANCE_NAME
-#define OTBR_MESHCOP_SERVICE_INSTANCE_NAME OTBR_VENDOR_NAME "_" OTBR_PRODUCT_NAME
+#define OTBR_MESHCOP_SERVICE_INSTANCE_NAME OTBR_VENDOR_NAME " " OTBR_PRODUCT_NAME
 #endif
 
 namespace otbr {
@@ -76,18 +78,18 @@ namespace otbr {
  * This class implements Thread border agent functionality.
  *
  */
-class BorderAgent : public MainloopProcessor
+class BorderAgent : private NonCopyable
 {
 public:
     /**
      * The constructor to initialize the Thread border agent.
      *
-     * @param[in]  aNcp  A reference to the NCP controller.
+     * @param[in] aNcp  A reference to the NCP controller.
      *
      */
     BorderAgent(otbr::Ncp::ControllerOpenThread &aNcp);
 
-    ~BorderAgent(void) override;
+    ~BorderAgent(void);
 
     /**
      * This method initialize border agent service.
@@ -96,20 +98,10 @@ public:
     void Init(void);
 
     /**
-     * This method updates the mainloop context.
-     *
-     * @param[inout]  aMainloop  A reference to the mainloop to be updated.
+     * This method de-initializes border agent service.
      *
      */
-    void Update(MainloopContext &aMainloop) override;
-
-    /**
-     * This method processes mainloop events.
-     *
-     * @param[in]  aMainloop  A reference to the mainloop context.
-     *
-     */
-    void Process(const MainloopContext &aMainloop) override;
+    void Deinit(void);
 
 private:
     enum : uint8_t
@@ -154,22 +146,28 @@ private:
         uint32_t ToUint32(void) const;
     };
 
-    otbrError   Start(void);
-    void        Stop(void);
-    static void HandleMdnsState(void *aContext, Mdns::Publisher::State aState);
-    void        HandleMdnsState(Mdns::Publisher::State aState);
-    void        PublishMeshCopService(void);
-    void        UnpublishMeshCopService(void);
-    void        UpdateMeshCopService(void);
+    void Start(void);
+    void Stop(void);
+    void HandleMdnsState(Mdns::Publisher::State aState);
+    void PublishMeshCopService(void);
+    void UpdateMeshCopService(void);
+    void UnpublishMeshCopService(void);
+#if OTBR_ENABLE_DBUS_SERVER
+    void HandleUpdateVendorMeshCoPTxtEntries(std::map<std::string, std::vector<uint8_t>> aUpdate);
+#endif
 
     void HandleThreadStateChanged(otChangedFlags aFlags);
 
-    bool IsThreadStarted(void) const;
-    bool IsPskcInitialized(void) const;
+    bool        IsThreadStarted(void) const;
+    std::string BaseServiceInstanceName() const;
+    std::string GetAlternativeServiceInstanceName() const;
 
     otbr::Ncp::ControllerOpenThread &mNcp;
     Mdns::Publisher *                mPublisher;
-    std::string                      mNetworkName;
+
+#if OTBR_ENABLE_DBUS_SERVER
+    std::map<std::string, std::vector<uint8_t>> mMeshCopTxtUpdate;
+#endif
 
 #if OTBR_ENABLE_SRP_ADVERTISING_PROXY
     AdvertisingProxy mAdvertisingProxy;
@@ -177,9 +175,11 @@ private:
 #if OTBR_ENABLE_DNSSD_DISCOVERY_PROXY
     Dnssd::DiscoveryProxy mDiscoveryProxy;
 #endif
-#if OTBR_ENABLE_BACKBONE_ROUTER
-    BackboneRouter::BackboneAgent mBackboneAgent;
+#if OTBR_ENABLE_TREL
+    TrelDnssd::TrelDnssd mTrelDnssd;
 #endif
+
+    std::string mServiceInstanceName;
 };
 
 /**

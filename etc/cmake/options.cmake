@@ -30,6 +30,11 @@ find_package(PkgConfig)
 
 option(OTBR_DOC "Build documentation" OFF)
 
+option(OTBR_BORDER_AGENT "Enable Border Agent" ON)
+if (OTBR_BORDER_AGENT)
+    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_BORDER_AGENT=1)
+endif()
+
 option(OTBR_BACKBONE_ROUTER "Enable Backbone Router" OFF)
 if (OTBR_BACKBONE_ROUTER)
     target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_BACKBONE_ROUTER=1)
@@ -74,4 +79,15 @@ if(OTBR_UNSECURE_JOIN)
     target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_UNSECURE_JOIN=1)
 endif()
 
+option(OTBR_TREL "Enable TREL link support." OFF)
+if(OTBR_TREL)
+    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_TREL=1)
+endif()
+
+
 option(OTBR_WEB "Enable Web GUI" OFF)
+
+option(OTBR_NOTIFY_UPSTART "Notify upstart when ready." ON)
+if(OTBR_NOTIFY_UPSTART)
+    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_NOTIFY_UPSTART=1)
+endif()

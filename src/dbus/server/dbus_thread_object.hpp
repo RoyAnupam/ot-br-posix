@@ -38,8 +38,8 @@
 
 #include <openthread/link.h>
 
-#include "agent/ncp_openthread.hpp"
 #include "dbus/server/dbus_object.hpp"
+#include "ncp/ncp_openthread.hpp"
 
 namespace otbr {
 namespace DBus {
@@ -63,29 +63,29 @@ public:
     /**
      * This constructor of dbus thread object.
      *
-     * @param[in]       aConnection     The dbus connection.
-     * @param[in]       aInterfaceName  The dbus interface name.
-     * @param[in]       aNcp            The ncp controller
+     * @param[in] aConnection     The dbus connection.
+     * @param[in] aInterfaceName  The dbus interface name.
+     * @param[in] aNcp            The ncp controller
      *
      */
     DBusThreadObject(DBusConnection *                 aConnection,
                      const std::string &              aInterfaceName,
                      otbr::Ncp::ControllerOpenThread *aNcp);
 
-    /**
-     * This method initializes the dbus thread object.
-     *
-     * @returns The initialization error.
-     *
-     */
     otbrError Init(void) override;
+
+    void RegisterGetPropertyHandler(const std::string &        aInterfaceName,
+                                    const std::string &        aPropertyName,
+                                    const PropertyHandlerType &aHandler) override;
 
 private:
     void DeviceRoleHandler(otDeviceRole aDeviceRole);
     void NcpResetHandler(void);
 
     void ScanHandler(DBusRequest &aRequest);
+    void EnergyScanHandler(DBusRequest &aRequest);
     void AttachHandler(DBusRequest &aRequest);
+    void AttachAllNodesToHandler(DBusRequest &aRequest);
     void DetachHandler(DBusRequest &aRequest);
     void LeaveHandler(DBusRequest &aRequest);
     void FactoryResetHandler(DBusRequest &aRequest);
@@ -97,6 +97,8 @@ private:
     void RemoveOnMeshPrefixHandler(DBusRequest &aRequest);
     void AddExternalRouteHandler(DBusRequest &aRequest);
     void RemoveExternalRouteHandler(DBusRequest &aRequest);
+    void UpdateMeshCopTxtHandler(DBusRequest &aRequest);
+    void GetPropertiesHandler(DBusRequest &aRequest);
 
     void IntrospectHandler(DBusRequest &aRequest);
 
@@ -132,12 +134,20 @@ private:
     otError GetInstantRssiHandler(DBusMessageIter &aIter);
     otError GetRadioTxPowerHandler(DBusMessageIter &aIter);
     otError GetExternalRoutesHandler(DBusMessageIter &aIter);
+    otError GetOnMeshPrefixesHandler(DBusMessageIter &aIter);
     otError GetActiveDatasetTlvsHandler(DBusMessageIter &aIter);
     otError GetRadioRegionHandler(DBusMessageIter &aIter);
+    otError GetSrpServerInfoHandler(DBusMessageIter &aIter);
+    otError GetDnssdCountersHandler(DBusMessageIter &aIter);
+    otError GetOtHostVersionHandler(DBusMessageIter &aIter);
+    otError GetOtRcpVersionHandler(DBusMessageIter &aIter);
+    otError GetThreadVersionHandler(DBusMessageIter &aIter);
 
     void ReplyScanResult(DBusRequest &aRequest, otError aError, const std::vector<otActiveScanResult> &aResult);
+    void ReplyEnergyScanResult(DBusRequest &aRequest, otError aError, const std::vector<otEnergyScanResult> &aResult);
 
-    otbr::Ncp::ControllerOpenThread *mNcp;
+    otbr::Ncp::ControllerOpenThread *                    mNcp;
+    std::unordered_map<std::string, PropertyHandlerType> mGetPropertyHandlers;
 };
 
 } // namespace DBus
